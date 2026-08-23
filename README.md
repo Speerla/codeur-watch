@@ -56,21 +56,33 @@ En local, la clé est lue automatiquement dans `../../site/.env.vercel.local`
 (récupérée avec `vercel env pull` depuis le projet speerla). En CI, elle arrive
 par les secrets GitHub.
 
-## Veille 24/7 avec GitHub Actions
+## Veille automatique sur le PC (active)
 
-Le workflow `.github/workflows/veille.yml` tourne toutes les 5 minutes.
-Deux commandes restent à lancer à la main, une seule fois :
+Une tâche planifiée Windows tourne déjà toutes les 5 minutes, sans fenêtre :
+
+```
+nom       : Speerla - Veille Codeur
+commande  : pythonw.exe runner.py
+journal   : veille.log
+```
 
 ```bash
-# 1. autoriser gh à pousser des workflows (le scope manque aujourd'hui)
-gh auth refresh -h github.com -s workflow
-git add .github && git commit -m "Ajoute la veille planifiee" && git push
-
-# 2. déposer les secrets sur le repo
-gh secret set RESEND_API_KEY --repo Speerla/codeur-watch
-gh secret set AUDIT_FROM --repo Speerla/codeur-watch --body "Robin Bouvet - Speerla <audit@speerlastudio.com>"
-gh secret set WATCH_TO --repo Speerla/codeur-watch --body "audit@speerlastudio.com"
+schtasks /query /tn "Speerla - Veille Codeur"    # état et prochaine exécution
+schtasks /run   /tn "Speerla - Veille Codeur"    # forcer une passe
+schtasks /end   /tn "Speerla - Veille Codeur"    # stopper la passe en cours
+schtasks /delete /tn "Speerla - Veille Codeur"   # tout retirer
 ```
+
+Elle ne tourne évidemment que quand le PC est allumé. Pour du vrai 24/7, voir ci dessous.
+
+## Veille 24/7 avec GitHub Actions
+
+Le workflow `.github/workflows/veille.yml` tourne toutes les 5 minutes sur les runners
+GitHub. Il reste une mise en route à faire une seule fois, parce qu'elle demande un
+navigateur et une clé API : double-cliquer sur `setup-github.bat`.
+
+Le script autorise `gh` à pousser des workflows, envoie le workflow, puis dépose les
+trois secrets sur le repo `Speerla/codeur-watch`.
 
 Le cron GitHub peut se décaler de quelques minutes aux heures chargées. C'est pour ça
 que la fenêtre est réglée sur 3 heures : un projet publié pendant un retard de runner
