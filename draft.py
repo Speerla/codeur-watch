@@ -79,10 +79,14 @@ def phrase_cle(brief):
     return brief[:150].strip(" .…")
 
 
-def rediger(titre, brief, categories="", budget=""):
+def rediger(titre, brief, categories="", budget="", constat=None):
+    """constat : phrase issue d'une mesure réelle du site du client (probe.py), ou None."""
     a = analyse(titre, brief, categories)
     cite = phrase_cle(brief)
 
+    # un constat mesuré prouve qu'un site tourne déjà : ce n'est jamais une page blanche
+    if constat:
+        a["refonte"] = True
     if a["refonte"]:
         ouverture = ("Vous ne partez pas de zéro, vous remplacez quelque chose qui tourne déjà. "
                      "C'est plus délicat qu'une création, parce qu'il faut moderniser sans casser "
@@ -92,7 +96,13 @@ def rediger(titre, brief, categories="", budget=""):
                      "premières semaines. C'est là que se décide si le site vous sert vraiment "
                      "ou s'il reste une carte de visite.")
 
-    accroche = "Bonjour,\n\n" + ouverture
+    # Un constat mesuré vaut mieux que n'importe quelle accroche : il prouve
+    # qu'on a ouvert le site avant d'écrire. Il passe donc en premier.
+    accroche = "Bonjour,\n\n"
+    if constat:
+        accroche += constat + " " + ouverture
+    else:
+        accroche += ouverture
     if cite:
         accroche += "\n\nCe que je retiens de votre brief : %s." % cite.rstrip(".")
 

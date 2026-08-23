@@ -196,11 +196,22 @@ def run_once(args, state):
     if args.notify:
         import draft
         import notify
+        import probe
         brouillons = {}
         for i in fresh:
             mins = int(age_h(i) * 60)
             i["age"] = "%d min" % mins if mins < 120 else "%d h" % (mins // 60)
-            brouillons[i["id"]] = draft.rediger(i["title"], i["body"], i["cats"], i["budget"])
+            # si le brief cite un site, on va le mesurer pour ouvrir sur un fait
+            constat = None
+            hote = probe.trouver_domaine(i["title"], i["body"])
+            if hote:
+                try:
+                    constat = probe.constat(probe.mesurer(hote))
+                    print("  site mesure : %s" % hote)
+                except Exception as e:
+                    print("  mesure impossible (%s) : %s" % (hote, e), file=sys.stderr)
+            brouillons[i["id"]] = draft.rediger(i["title"], i["body"], i["cats"],
+                                                i["budget"], constat)
         try:
             res = notify.envoyer(fresh, brouillons)
             print("  email envoye (%s)" % res.get("id", "?"))
