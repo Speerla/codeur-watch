@@ -1,0 +1,54 @@
+name: Veille Codeur
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # toutes les 5 min (GitHub peut décaler de quelques minutes)
+  workflow_dispatch:
+    inputs:
+      min_score:
+        description: "Seuil de score"
+        default: "8"
+      max_age:
+        description: "Fenêtre en heures"
+        default: "3"
+
+concurrency:
+  group: veille-codeur
+  cancel-in-progress: false
+
+jobs:
+  veille:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # état des projets déjà signalés, pour ne jamais envoyer deux fois le même
+      - name: Restaurer l'état
+        uses: actions/cache/restore@v4
+        with:
+          path: state.json
+          key: codeur-state-${{ github.run_id }}
+          restore-keys: codeur-state-
+
+      - name: Scanner le flux
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          AUDIT_FROM: ${{ secrets.AUDIT_FROM }}
+          WATCH_TO: ${{ secrets.WATCH_TO }}
+        run: |
+          python watch.py --notify \
+            --min-score "${{ github.event.inputs.min_score || '8' }}" \
+            --min-budget 500 \
+            --max-age "${{ github.event.inputs.max_age || '3' }}"
+
+      - name: Sauver l'état
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: state.json
+          key: codeur-state-${{ github.run_id }}
