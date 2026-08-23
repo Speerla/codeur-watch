@@ -2,7 +2,11 @@ name: Veille Codeur
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # toutes les 5 min (GitHub peut décaler de quelques minutes)
+    # Toutes les 20 min de 7h à 23h (Paris). Volontairement pas plus souvent :
+    # un repo privé n'a que 2 000 minutes d'Actions gratuites par mois, et chaque
+    # passe est facturée 1 minute minimum. Ici on tourne à ~1 530 min/mois.
+    # Le PC, lui, scanne toutes les 5 min via la tâche planifiée Windows.
+    - cron: "*/20 5-21 * * *"
   workflow_dispatch:
     inputs:
       min_score:
