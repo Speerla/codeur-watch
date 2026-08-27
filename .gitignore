@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 .env*
 veille.log
+radar-state.json
+radar-creations.csv

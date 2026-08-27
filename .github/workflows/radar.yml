@@ -1,0 +1,62 @@
+name: Radar BODACC
+
+on:
+  schedule:
+    # une passe par jour à 6h05 UTC, les créations d'entreprises ne bougent pas plus vite
+    - cron: "5 6 * * *"
+  workflow_dispatch:
+    inputs:
+      depts:
+        description: "Départements, séparés par un espace (vide = liste par défaut)"
+        default: ""
+      tout:
+        description: "Ignorer l'état et tout ressortir (true/false)"
+        default: "false"
+
+concurrency:
+  group: radar-bodacc
+  cancel-in-progress: false
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Restaurer l'état
+        uses: actions/cache/restore@v4
+        with:
+          path: radar-state.json
+          key: radar-state-${{ github.run_id }}
+          restore-keys: radar-state-
+
+      - name: Scanner le BODACC
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          AUDIT_FROM: ${{ secrets.AUDIT_FROM }}
+          WATCH_TO: ${{ secrets.WATCH_TO }}
+        run: |
+          python radar.py --notify \
+            ${{ github.event.inputs.tout == 'true' && '--all' || '' }} \
+            ${{ github.event.inputs.depts }}
+
+      - name: Garder le CSV
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: radar-creations
+          path: radar-creations.csv
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Sauver l'état
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: radar-state.json
+          key: radar-state-${{ github.run_id }}

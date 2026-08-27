@@ -45,10 +45,23 @@ def _bloc(item, brouillon):
         url=H.escape(item["url"]), draft=H.escape(brouillon))
 
 
-def envoyer(items, brouillons):
+def envoyer_html(sujet, html_body):
+    """Brique d'envoi partagée par la veille Codeur et le radar BODACC."""
     key = os.environ.get("RESEND_API_KEY")
     if not key:
         raise RuntimeError("RESEND_API_KEY absent de l'environnement")
+    payload = json.dumps({
+        "from": FROM, "to": [TO], "subject": sujet, "html": html_body,
+    }).encode("utf-8")
+    req = urllib.request.Request(API, data=payload, method="POST", headers={
+        "Authorization": "Bearer " + key,
+        "Content-Type": "application/json",
+        "User-Agent": "SpeerlaWatch/1.0"})
+    with urllib.request.urlopen(req, timeout=25) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+
+def envoyer(items, brouillons):
     n = len(items)
     sujet = ("Codeur : %s" % items[0]["title"][:60]) if n == 1 else "Codeur : %d projets pour toi" % n
     corps = "".join(_bloc(i, brouillons[i["id"]]) for i in items)
@@ -60,13 +73,4 @@ def envoyer(items, brouillons):
   <div style="font:400 12px -apple-system,Segoe UI,sans-serif;color:#9ca3af;border-top:1px solid #eceff3;padding-top:14px">
     Envoyé par tools/codeur-watch. Les brouillons sont générés à partir du brief, relis avant d'envoyer.</div>
 </div>""".format(n=n, corps=corps)
-
-    payload = json.dumps({
-        "from": FROM, "to": [TO], "subject": sujet, "html": html_body,
-    }).encode("utf-8")
-    req = urllib.request.Request(API, data=payload, method="POST", headers={
-        "Authorization": "Bearer " + key,
-        "Content-Type": "application/json",
-        "User-Agent": "SpeerlaWatch/1.0"})
-    with urllib.request.urlopen(req, timeout=25) as r:
-        return json.loads(r.read().decode("utf-8"))
+    return envoyer_html(sujet, html_body)
