@@ -64,6 +64,15 @@ CATALOGUE = {
     "citation-filet": "Citation du client dans un filet vertical coloré",
     "compteur-avance": "Barre de progression ou compteur de pourcentage lié au "
                        "défilement",
+    "bandeau-billet": "Bandeau supérieur en format billet : nom, ville, horloge, "
+                      "état, sans logo ni menu",
+    "rail-jours": "Rail vertical de sélection des jours à gauche, avec un grand "
+                  "compteur en bas",
+    "ticket-glissant": "Ticket blanc qui monte du bas de l'écran à la sélection",
+    "verso-recu": "Le contenu secondaire imprimé à la suite comme le verso d'un "
+                  "reçu, lignes libellé/valeur",
+    "notes-lettres": "Notes d'honnêteté appelées par des lettres A, B, C collées "
+                     "aux éléments concernés",
 }
 
 # --------------------------------------------------------------------------- #
@@ -85,10 +94,21 @@ JOURNAL = [
         "page": "padel-presquile",
         "date": "2026-08-31",
         "metier": "sport",
-        "objet": "l'écran de réservation",
+        "objet": "un site avec une section réservation (VERSION ABANDONNÉE)",
         "dispositifs": ["entete-ecusson", "chapeau-trait", "titre-condense",
                         "piece-technique-2", "cartes-numerotees", "faux-google",
                         "suite-numerotee", "vrai-invente"],
+    },
+    {
+        "page": "padel-presquile-v2",
+        "date": "2026-08-31",
+        "metier": "sport",
+        "objet": "le tableau d'affichage lui-même, plein cadre, sans page d'accueil",
+        # Aucun dispositif du catalogue : c'est le premier essai construit sous
+        # interdiction. Ce qu'elle invente est consigné ci-dessous pour être
+        # interdit à son tour.
+        "dispositifs": ["bandeau-billet", "rail-jours", "ticket-glissant",
+                        "verso-recu", "notes-lettres"],
     },
 ]
 
