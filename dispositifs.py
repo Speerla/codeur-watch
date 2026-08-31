@@ -73,6 +73,14 @@ CATALOGUE = {
                   "reçu, lignes libellé/valeur",
     "notes-lettres": "Notes d'honnêteté appelées par des lettres A, B, C collées "
                      "aux éléments concernés",
+    "tete-numerotee": "Titres de section précédés d'un numéro 01, 02, 03 en ambre, "
+                      "sur une ligne avec le sous-titre",
+    "places-joueurs": "Quatre cases de joueurs qui se remplissent au clic pour "
+                      "rejoindre un match",
+    "echelle-niveaux": "Échelle de niveaux cliquable qui révèle une description "
+                       "franche par cran",
+    "regles-ecrites": "Bandeau de règles du club en colonnes, annulation, absence, "
+                      "retard",
 }
 
 # --------------------------------------------------------------------------- #
@@ -109,6 +117,18 @@ JOURNAL = [
         # interdit à son tour.
         "dispositifs": ["bandeau-billet", "rail-jours", "ticket-glissant",
                         "verso-recu", "notes-lettres"],
+    },
+    {
+        "page": "padel-presquile-v3",
+        "date": "2026-08-31",
+        "metier": "sport",
+        "objet": "le club entier : réserver, trouver un quatrième, se situer",
+        # Recherche faite avant de construire : le manque de quatrieme joueur est
+        # le premier obstacle du padel, les niveaux 3 a 7 sont incompris, et les
+        # clubs souffrent des no-shows. Ces trois constats commandent la structure.
+        "dispositifs": ["bandeau-billet", "rail-jours", "ticket-glissant",
+                        "verso-recu", "notes-lettres", "tete-numerotee",
+                        "places-joueurs", "echelle-niveaux", "regles-ecrites"],
     },
 ]
 
