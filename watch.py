@@ -215,6 +215,20 @@ def run_once(args, state):
         return
     print("%s  %d projet(s) pour Speerla sur %d scannes" % (stamp, len(fresh), len(items)))
     fresh = sorted(fresh, key=lambda x: (-x["score"], x["pub"]))
+    if args.notify:
+        # Le classement qui compte n'est pas le score seul : un projet a 4 offres
+        # se joue encore, le meme a 80 est deja perdu pour un devis de plus.
+        # On releve donc la fenetre AVANT de trier, et on remonte ce qui est
+        # encore ouvert. Un appel HTTP par projet, c'est le prix du signal.
+        # Un appel HTTP par projet : en veille normale il n'y a que les
+        # nouveautes, donc zero a trois. Sur un rattrapage (--all) il peut y en
+        # avoir quatre-vingts, et le job GitHub est coupe a 5 minutes. On ne
+        # sonde donc que les mieux places au score.
+        for i in fresh[:12]:
+            i["offres"] = offres_recues(i["url"])
+        fresh = sorted(fresh, key=lambda x: (
+            x.get("offres") if x.get("offres") is not None else 999,
+            -x["score"], x["pub"]))
     for i in fresh:
         print(render(i))
     if args.notify:
@@ -223,11 +237,6 @@ def run_once(args, state):
         import probe
         brouillons = {}
         for i in fresh:
-            # Combien de devis sont deja tombes. Sur Codeur un projet web
-            # ramasse 30 a 99 offres en quelques heures : arriver a 3 offres
-            # ou a 60 ne se joue pas du tout pareil, et c'est invisible dans
-            # le flux RSS. On le lit sur la page publique du projet.
-            i["offres"] = offres_recues(i["url"])
             mins = int(age_h(i) * 60)
             i["age"] = "%d min" % mins if mins < 120 else "%d h" % (mins // 60)
             # si le brief cite un site, on va le mesurer pour ouvrir sur un fait
