@@ -5,3 +5,4 @@ __pycache__/
 veille.log
 radar-state.json
 radar-creations.csv
+kits/

@@ -51,7 +51,28 @@ NEGATIF = ["community manager", "community management", "redaction d'articles", 
            "saisie de donnees", "data entry", "traduction de documents", "prospection commerciale",
            "call center", "standard telephonique", "comptabilite", "juridique"]
 
+# Identité et print : le livrable n'est pas une page, donc la maquette déployée
+# n'a aucune prise. Ces projets demandent en plus un book et des références,
+# c'est-à-dire exactement ce qu'un nouveau profil n'a pas. Rejet ferme, pas un
+# simple malus : un projet de logo à 400 € ne devient jamais bon.
+REDHIBITOIRE = ["refonte de logo", "refonte graphique", "creation de logo", "design de notre logo",
+                "charte graphique", "identite visuelle", "carte de visite", "cartes de visites",
+                "flyer", "plaquette commerciale", "kakemono", "roll-up", "packaging",
+                "graphiste print", "mise en page", "book de presentation"]
+
 BUDGET_PALIERS = [("10 000", 10000), ("5 000", 5000), ("1 000", 1000), ("500", 500)]
+
+
+def offres_recues(url):
+    """Nombre de devis deja deposes, lu sur la page publique du projet."""
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            page = r.read(400_000).decode("utf-8", "replace")
+        m = re.search(r"(\d+)\s+offres?\b", page, re.I)
+        return int(m.group(1)) if m else None
+    except Exception:
+        return None
 
 
 def norm(s):
@@ -103,6 +124,9 @@ def score(item):
         if norm(w) in hay:
             pts -= 4
             hits.append("!" + w)
+    for w in REDHIBITOIRE:
+        if norm(w) in hay:
+            return -99, ["REJET:" + w]
     if item["budget_min"] >= 5000:
         pts += 3
     elif item["budget_min"] >= 1000:
@@ -199,6 +223,11 @@ def run_once(args, state):
         import probe
         brouillons = {}
         for i in fresh:
+            # Combien de devis sont deja tombes. Sur Codeur un projet web
+            # ramasse 30 a 99 offres en quelques heures : arriver a 3 offres
+            # ou a 60 ne se joue pas du tout pareil, et c'est invisible dans
+            # le flux RSS. On le lit sur la page publique du projet.
+            i["offres"] = offres_recues(i["url"])
             mins = int(age_h(i) * 60)
             i["age"] = "%d min" % mins if mins < 120 else "%d h" % (mins // 60)
             # si le brief cite un site, on va le mesurer pour ouvrir sur un fait

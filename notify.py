@@ -23,11 +23,24 @@ FROM = os.environ.get("AUDIT_FROM", "Robin Bouvet - Speerla <audit@speerlastudio
 TO = os.environ.get("WATCH_TO", "audit@speerlastudio.com")
 
 
+def _fenetre(offres):
+    """Le nombre de devis deja deposes, traduit en verdict et en couleur."""
+    if offres is None:
+        return "offres inconnues", "#6b7280"
+    if offres == 0:
+        return "PERSONNE N'A REPONDU", "#047857"
+    if offres <= 5:
+        return "%d offres, fenêtre ouverte" % offres, "#047857"
+    if offres <= 20:
+        return "%d offres, ça se referme" % offres, "#b45309"
+    return "%d offres, il faut la maquette" % offres, "#b91c1c"
+
+
 def _bloc(item, brouillon):
     return """
 <div style="border:1px solid #d8dde6;border-radius:10px;padding:18px 20px;margin:0 0 22px">
   <div style="font:600 12px/1 -apple-system,Segoe UI,sans-serif;color:#6b7280;letter-spacing:.06em;text-transform:uppercase">
-    {score} pts &nbsp;·&nbsp; {budget} &nbsp;·&nbsp; publié il y a {age}
+    {score} pts &nbsp;·&nbsp; {budget} &nbsp;·&nbsp; publié il y a {age} &nbsp;·&nbsp; <span style="color:{teinte}">{fenetre}</span>
   </div>
   <h2 style="font:700 19px/1.3 -apple-system,Segoe UI,sans-serif;color:#0f172a;margin:8px 0 10px">{titre}</h2>
   <p style="font:400 14px/1.55 -apple-system,Segoe UI,sans-serif;color:#374151;margin:0 0 14px">{brief}</p>
@@ -41,6 +54,7 @@ def _bloc(item, brouillon):
        font:400 13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#111827;margin:0">{draft}</pre>
 </div>""".format(
         score=item["score"], budget=H.escape(item["budget"]), age=item["age"],
+        fenetre=_fenetre(item.get("offres"))[0], teinte=_fenetre(item.get("offres"))[1],
         titre=H.escape(item["title"]), brief=H.escape(item["body"][:600]),
         url=H.escape(item["url"]), draft=H.escape(brouillon))
 
