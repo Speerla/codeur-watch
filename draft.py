@@ -79,8 +79,19 @@ def phrase_cle(brief):
     return brief[:150].strip(" .…")
 
 
-def rediger(titre, brief, categories="", budget="", constat=None):
-    """constat : phrase issue d'une mesure réelle du site du client (probe.py), ou None."""
+def rediger(titre, brief, categories="", budget="", constat=None, maquette=None):
+    """Ecrit le brouillon de reponse a un projet Codeur.
+
+    constat  : phrase issue d'une mesure reelle du site du client (probe.py)
+    maquette : URL d'une page DEJA construite et deployee pour ce client
+
+    Pourquoi ce second parametre. Un projet web sur Codeur ramasse entre 32 et
+    107 offres en moins de deux jours, et les cent disent la meme chose :
+    "je vous montrerai une maquette". Promettre ne distingue plus personne.
+    Quand la page existe deja, le brouillon change de nature : il ne vend rien,
+    il donne une adresse a ouvrir. C'est la seule chose de la pile que le client
+    peut verifier en un clic.
+    """
     a = analyse(titre, brief, categories)
     cite = phrase_cle(brief)
 
@@ -116,8 +127,16 @@ def rediger(titre, brief, categories="", budget="", constat=None):
         lignes.append("Je commence par cadrer ce que le site doit vous rapporter concrètement, "
                       "avant de parler de design.")
 
-    methode = ("Ma façon de travailler : je vous montre une maquette de la page principale avant de "
-               "coder quoi que ce soit. Vous voyez le résultat, vous tranchez, on avance seulement après.")
+    if maquette:
+        methode = ("Je ne vais pas vous décrire ce que je ferais, je l'ai fait. Voici la page "
+                   "d'accueil, construite pour vous, en ligne :\n\n%s\n\n"
+                   "Elle n'est référencée nulle part et vous êtes le seul à avoir l'adresse. "
+                   "Ouvrez la depuis votre téléphone, c'est fait pour. Ce qui n'est pas de vous "
+                   "y est marqué comme tel, en toutes lettres." % maquette)
+    else:
+        methode = ("Ma façon de travailler : je construis la page d'accueil avant de vous "
+                   "facturer quoi que ce soit. Vous la voyez en ligne, vous tranchez, et on "
+                   "avance seulement si elle vous parle.")
 
     positionnement = ("Je suis indépendant, pas une agence. Vous parlez directement à la personne qui "
                       "fait le travail, et le budget ne se dilue pas dans des couches intermédiaires.")
@@ -125,16 +144,20 @@ def rediger(titre, brief, categories="", budget="", constat=None):
     if a["urgent"]:
         cloture = ("Vous mentionnez un délai serré : donnez-moi votre date butoir, je vous dis "
                    "franchement si elle est tenable avant qu'on aille plus loin.")
+    elif maquette:
+        cloture = ("Vous regardez, et vous me dites soit que ça vous parle, soit que ça ne vous "
+                   "ressemble pas. Les deux me vont, et le travail vous reste dans les deux cas.")
     else:
-        cloture = ("Si ça vous parle, dites-moi simplement quelle page compte le plus pour vous. "
-                   "Je vous envoie une première proposition visuelle dessus.")
+        cloture = ("Dites-moi simplement quelle page compte le plus pour vous, et je vous la "
+                   "construis en premier.")
 
-    corps = "\n\n".join([
-        accroche,
-        "\n".join("- " + l for l in lignes[:3]),
-        methode,
-        positionnement,
-        cloture,
+    # Avec une maquette, la preuve passe devant et les details techniques
+    # derriere : le client ouvre le lien avant de lire la suite, ou ne lit pas
+    # la suite du tout. Sans maquette, on garde l'ordre classique.
+    bloc_points = "\n".join("- " + l for l in lignes[:3])
+    ordre = ([accroche, methode, bloc_points, positionnement, cloture] if maquette
+             else [accroche, bloc_points, methode, positionnement, cloture])
+    corps = "\n\n".join(ordre + [
         "Cordialement,\nRobin Bouvet\nSpeerla Studio\nspeerlastudio.com",
     ])
     # règle maison : jamais de tiret cadratin
