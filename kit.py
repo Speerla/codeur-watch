@@ -366,11 +366,117 @@ def dossier_md(p, mesure, ident, nom):
     return "\n".join(L)
 
 
+def socle_html(nom, ident, mesure, p):
+    """Le point de depart d'une maquette : ses couleurs, ses polices, ses faits.
+
+    Volontairement SANS mise en page. Pas de hero, pas de grille, pas de
+    sections toutes faites : un gabarit recolore se voit au premier coup d'oeil
+    et c'est exactement ce qu'on refuse. Ce fichier ne fait gagner que le temps
+    qui ne merite pas d'etre passe : declarer les bonnes couleurs, charger les
+    bonnes polices, et avoir sous la main les chiffres qu'on a le droit de citer.
+    """
+    couleurs = [c["couleur"] for c in (ident or {}).get("palette", [])][:5]
+    tokens = "\n".join("      --marque-%d: %s;" % (i + 1, c)
+                        for i, c in enumerate(couleurs)) or \
+        "      /* aucune couleur relevee : a prendre sur son logo ou ses photos */"
+
+    familles = [f["police"] for f in (ident or {}).get("polices", [])][:2]
+    lien_polices = ""
+    if familles:
+        q = "&".join("family=" + f.replace(" ", "+") + ":wght@400;600;800"
+                     for f in familles)
+        lien_polices = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+                        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+                        '<link href="https://fonts.googleapis.com/css2?%s&display=swap" '
+                        'rel="stylesheet">' % q)
+    pile = ", ".join('"%s"' % f for f in familles) or "system-ui"
+
+    faits = []
+    if mesure:
+        if not mesure.get("https"):
+            faits.append("pas de HTTPS sur le site actuel")
+        if mesure.get("poids_images_ko", 0) > 1500:
+            faits.append("page d'accueil a %.1f Mo d'images"
+                         % ((mesure.get("poids_images_ko", 0) + mesure.get("poids_html_ko", 0)) / 1024))
+        if not mesure.get("h1"):
+            faits.append("aucun titre H1")
+        if not mesure.get("viewport"):
+            faits.append("aucune balise viewport")
+        if mesure.get("nb_scripts", 0) >= 20:
+            faits.append("%d scripts externes" % mesure["nb_scripts"])
+        if mesure.get("generator"):
+            faits.append("fait avec %s" % mesure["generator"])
+    liste_faits = "\n".join("    <li>%s</li>" % f for f in faits) or \
+        "    <li>rien de mesure pour l'instant</li>"
+
+    medias = [m["fichier"].split("/")[-1].split("\\")[-1]
+              for m in (ident or {}).get("medias", [])][:10]
+    liste_medias = "\n".join("    <li>medias/%s</li>" % m for m in medias) or \
+        "    <li>aucun media recupere</li>"
+
+    return """<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>%(nom)s</title>
+%(polices)s
+<style>
+  :root {
+%(tokens)s
+    --texte: #14161a;
+    --fond: #ffffff;
+  }
+  /* Les polices du client, chargees. La mise en page reste a dessiner :
+     ce fichier ne contient volontairement aucune grille ni aucun bloc tout
+     fait, pour qu'aucune maquette ne ressemble a la precedente. */
+  body { margin:0; background:var(--fond); color:var(--texte);
+         font-family:%(pile)s, system-ui, sans-serif; }
+  .chantier { max-width:44rem; margin:8vh auto; padding:0 1.5rem;
+              font:400 15px/1.6 ui-monospace, monospace; }
+  .chantier h1 { font-size:1.4rem; }
+  .chantier ul { padding-left:1.2rem; }
+  .puces { display:flex; gap:.5rem; margin:1rem 0; }
+  .puce { width:44px; height:44px; border-radius:6px; border:1px solid #0002; }
+</style>
+
+<div class="chantier">
+  <h1>%(nom)s</h1>
+  <p><strong>Socle, pas maquette.</strong> Ce fichier porte ses couleurs, ses
+  polices et ses faits. La page se dessine a partir d'ici, de zero.</p>
+
+  <div class="puces">%(puces)s</div>
+
+  <h2>Ce qui est mesure, donc citable</h2>
+  <ul>
+%(faits)s
+  </ul>
+
+  <h2>Ses fichiers, deja telecharges</h2>
+  <ul>
+%(medias)s
+  </ul>
+
+  <h2>Avant de livrer</h2>
+  <ul>
+    <li>ce qui n'est pas de lui porte la mention "illustration", en clair</li>
+    <li>aucun chiffre affiche qui ne soit pas dans DOSSIER.md</li>
+    <li>aucun temoignage, aucun logo client invente</li>
+    <li>recette en 390 px avant de deployer</li>
+  </ul>
+</div>
+""" % {"nom": H.escape(nom), "polices": lien_polices, "tokens": tokens,
+       "pile": pile, "faits": liste_faits, "medias": liste_medias,
+       "puces": "".join('<span class="puce" style="background:%s"></span>' % c
+                        for c in couleurs)}
+
+
 def main():
     ap = argparse.ArgumentParser(description="Kit de départ d'une maquette Codeur.")
     ap.add_argument("projet", nargs="?", help="id ou URL du projet Codeur")
     ap.add_argument("--site", help="domaine du client, si le brief ne le donne pas")
     ap.add_argument("--nom", help="nom du client ou du projet, pour le dossier")
+    ap.add_argument("--page", action="store_true",
+                    help="ecrit aussi index.html, le socle de la maquette")
     args = ap.parse_args()
 
     if hasattr(sys.stdout, "reconfigure"):
@@ -402,6 +508,11 @@ def main():
             os.path.join(sortie, "medias"))
         with open(os.path.join(sortie, "identite.json"), "w", encoding="utf-8") as f:
             json.dump(ident, f, ensure_ascii=False, indent=2)
+
+    if args.page:
+        with open(os.path.join(sortie, "index.html"), "w", encoding="utf-8") as f:
+            f.write(socle_html(nom, ident, mesure, p))
+        print("  socle ecrit : index.html")
 
     md = dossier_md(p, mesure, ident, nom)
     with open(os.path.join(sortie, "DOSSIER.md"), "w", encoding="utf-8") as f:
