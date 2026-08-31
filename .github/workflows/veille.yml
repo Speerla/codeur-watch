@@ -1,13 +1,30 @@
 name: Veille Codeur
 
 on:
+  # DÉCLENCHEUR PRINCIPAL : un appel HTTP extérieur.
+  #
+  # Mesuré le 31/08/2026 sur les vingt dernières exécutions : le planificateur
+  # de GitHub réclamait 20 minutes et livrait entre 1 h et 8 h d'écart. C'est un
+  # comportement connu et sans recours, GitHub déclasse les workflows planifiés.
+  # Sur une veille où un projet ramasse jusqu'à 7 offres par heure, ce retard
+  # coûte la mission.
+  #
+  # On garde donc GitHub pour le travail, et on confie l'horloge à un service de
+  # cron externe qui, lui, tient la minute. Il suffit qu'il poste :
+  #
+  #   curl -X POST https://api.github.com/repos/Speerla/codeur-watch/dispatches \
+  #        -H "Authorization: Bearer <TOKEN>" \
+  #        -H "Accept: application/vnd.github+json" \
+  #        -d '{"event_type":"veille"}'
+  #
+  # Le jeton doit être un PAT à portée restreinte : ce dépôt uniquement,
+  # permission Contents en écriture, rien d'autre.
+  repository_dispatch:
+    types: [veille]
+
   schedule:
-    # Toutes les 5 min de 7h à 23h (Paris). C'était 20 min tant que le dépôt
-    # était privé : les 2 000 minutes gratuites mensuelles n'y suffisaient pas,
-    # chaque passe étant facturée 1 minute minimum. Le dépôt est public depuis
-    # le 31/08/2026, les minutes d'Actions y sont illimitées, la contrainte a
-    # disparu. On arrive donc à la même cadence que la tâche planifiée Windows,
-    # mais sans dépendre d'un PC allumé.
+    # Filet de sécurité, rien de plus. Si le déclencheur externe tombe en panne,
+    # la veille continue de tourner, en retard mais elle tourne.
     - cron: "*/5 5-21 * * *"
   workflow_dispatch:
     inputs:

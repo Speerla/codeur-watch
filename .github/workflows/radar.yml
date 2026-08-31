@@ -4,6 +4,9 @@ on:
   schedule:
     # une passe par jour à 6h05 UTC, les créations d'entreprises ne bougent pas plus vite
     - cron: "5 6 * * *"
+  repository_dispatch:
+    types: [radar]
+
   workflow_dispatch:
     inputs:
       depts:
