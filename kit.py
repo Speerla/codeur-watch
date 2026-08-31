@@ -42,6 +42,11 @@ try:
 except ImportError:
     directions = None
 
+try:
+    import dispositifs  # ce qui a déjà servi, donc ce qui est interdit
+except ImportError:
+    dispositifs = None
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 KITS = os.path.join(HERE, "kits")
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -367,6 +372,12 @@ def dossier_md(p, mesure, ident, nom):
             (mesure or {}).get("titre", ""),
         ]))
         a(directions.bloc_markdown(source))
+
+    if dispositifs:
+        # Une direction ne suffit pas : deux pages peuvent avoir des palettes
+        # opposées et le même squelette. C'est arrivé le 31/08/2026 avec
+        # MECA 02 et Padel Presqu'île. L'interdit porte donc sur la structure.
+        a(dispositifs.bloc_markdown())
 
     a("## Avant d'écrire une ligne de la page")
     a("")
