@@ -37,6 +37,11 @@ try:
 except ImportError:
     probe = None
 
+try:
+    import directions  # une direction visuelle par métier
+except ImportError:
+    directions = None
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 KITS = os.path.join(HERE, "kits")
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -350,6 +355,18 @@ def dossier_md(p, mesure, ident, nom):
                 a(f"- `{os.path.basename(m['fichier'])}` "
                   f"({m['octets'] // 1024} Ko) — {m['url'][:80]}")
             a("")
+
+    if directions:
+        # La direction se déduit du métier, pas de mon humeur du jour. C'est ce
+        # qui empêche la cinquième maquette de ressembler aux quatre premières.
+        source = " ".join(filter(None, [
+            nom,
+            (p or {}).get("titre", ""),
+            (p or {}).get("brief", ""),
+            (ident or {}).get("titre_page", ""),
+            (mesure or {}).get("titre", ""),
+        ]))
+        a(directions.bloc_markdown(source))
 
     a("## Avant d'écrire une ligne de la page")
     a("")
