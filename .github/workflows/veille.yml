@@ -2,11 +2,13 @@ name: Veille Codeur
 
 on:
   schedule:
-    # Toutes les 20 min de 7h à 23h (Paris). Volontairement pas plus souvent :
-    # un repo privé n'a que 2 000 minutes d'Actions gratuites par mois, et chaque
-    # passe est facturée 1 minute minimum. Ici on tourne à ~1 530 min/mois.
-    # Le PC, lui, scanne toutes les 5 min via la tâche planifiée Windows.
-    - cron: "*/20 5-21 * * *"
+    # Toutes les 5 min de 7h à 23h (Paris). C'était 20 min tant que le dépôt
+    # était privé : les 2 000 minutes gratuites mensuelles n'y suffisaient pas,
+    # chaque passe étant facturée 1 minute minimum. Le dépôt est public depuis
+    # le 31/08/2026, les minutes d'Actions y sont illimitées, la contrainte a
+    # disparu. On arrive donc à la même cadence que la tâche planifiée Windows,
+    # mais sans dépendre d'un PC allumé.
+    - cron: "*/5 5-21 * * *"
   workflow_dispatch:
     inputs:
       min_score:

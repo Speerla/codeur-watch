@@ -81,21 +81,21 @@ Elle ne tourne évidemment que quand le PC est allumé. Pour du vrai 24/7, voir 
 ## Veille 24/7 avec GitHub Actions
 
 Le workflow `.github/workflows/veille.yml` est en ligne et actif sur
-`Speerla/codeur-watch`. Il tourne toutes les 20 minutes entre 7h et 23h (heure de Paris).
+`Speerla/codeur-watch`. Il tourne toutes les 5 minutes entre 7h et 23h (heure de Paris).
 
 Il manque seulement les secrets : double-cliquer sur `setup-github.bat`, coller la clé
 Resend quand il la demande. Ensuite la veille tourne même PC éteint.
 
-### Pourquoi 20 minutes et pas 5
+### Pourquoi 5 minutes, et pourquoi c'était 20 avant
 
-Un repo privé n'a que 2 000 minutes d'Actions gratuites par mois, et GitHub facture
-1 minute minimum par passe. Toutes les 5 minutes, ça ferait 8 600 minutes par mois,
-soit une cinquantaine d'euros. Le réglage actuel tient dans ~1 530 minutes, donc gratuit.
+Un dépôt privé n'a que 2 000 minutes d'Actions gratuites par mois, et GitHub facture
+1 minute minimum par passe. Toutes les 5 minutes, ça faisait 8 600 minutes par mois,
+soit une cinquantaine d'euros : la cadence était donc bridée à 20 minutes, ce qui
+tenait dans ~1 530 minutes gratuites.
 
-Deux façons de descendre à 5 minutes partout si le besoin s'en fait sentir :
-passer le repo en public (minutes illimitées, mais la méthode devient lisible par
-tout le monde), ou garder la tâche Windows comme veille rapide quand le PC est allumé,
-GitHub servant de filet la nuit. C'est la configuration en place.
+Le dépôt est public depuis le 31 août 2026. Les minutes d'Actions y sont illimitées,
+la contrainte a sauté, et la veille cloud tourne désormais aussi vite que la tâche
+Windows, sans dépendre d'un PC allumé.
 
 Le cron GitHub peut se décaler de quelques minutes aux heures chargées. C'est pour ça
 que la fenêtre est réglée sur 3 heures : un projet publié pendant un retard de runner
