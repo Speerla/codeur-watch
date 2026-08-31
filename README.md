@@ -86,20 +86,54 @@ Le workflow `.github/workflows/veille.yml` est en ligne et actif sur
 Il manque seulement les secrets : double-cliquer sur `setup-github.bat`, coller la clé
 Resend quand il la demande. Ensuite la veille tourne même PC éteint.
 
-### Pourquoi 5 minutes, et pourquoi c'était 20 avant
+### Le planificateur de GitHub ne tient pas la cadence
 
-Un dépôt privé n'a que 2 000 minutes d'Actions gratuites par mois, et GitHub facture
-1 minute minimum par passe. Toutes les 5 minutes, ça faisait 8 600 minutes par mois,
-soit une cinquantaine d'euros : la cadence était donc bridée à 20 minutes, ce qui
-tenait dans ~1 530 minutes gratuites.
+Mesure faite le 31 aout 2026 sur les vingt dernieres executions declenchees par
+`schedule`, alors que le cron demandait 20 minutes :
 
-Le dépôt est public depuis le 31 août 2026. Les minutes d'Actions y sont illimitées,
-la contrainte a sauté, et la veille cloud tourne désormais aussi vite que la tâche
-Windows, sans dépendre d'un PC allumé.
+```
+30/08 23:51   30/08 21:33   30/08 18:34   30/08 14:59   30/08 10:25
+29/08 21:56   29/08 19:20   29/08 15:44   29/08 11:33   29/08 01:01
+```
 
-Le cron GitHub peut se décaler de quelques minutes aux heures chargées. C'est pour ça
-que la fenêtre est réglée sur 3 heures : un projet publié pendant un retard de runner
-est quand même signalé, et `state.json` empêche le doublon.
+Entre **1 h et 8 h** d'ecart. Toutes en succes, aucune en echec : GitHub ne
+plante pas, il declasse. C'est documente et sans recours. Sur une veille ou un
+projet ramasse jusqu'a 7 offres par heure, ce retard coute la mission.
+
+### Le declencheur HTTP
+
+On garde GitHub pour le travail et on lui retire l'horloge. Le workflow ecoute
+`repository_dispatch`, et n'importe quel service de cron exterieur le reveille :
+
+```bash
+curl -X POST https://api.github.com/repos/Speerla/codeur-watch/dispatches \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Accept: application/vnd.github+json" \
+  -d '{"event_type":"veille"}'
+```
+
+Teste le 31/08/2026 : le run demarre dans la seconde, contre 6 h d'attente pour
+la derniere execution planifiee.
+
+**Le jeton.** Un PAT *fine-grained*, cree sur
+`github.com/settings/personal-access-tokens/new` :
+
+- Repository access : **Only select repositories**, et seulement `codeur-watch`
+- Permissions : **Contents = Read and write**, rien d'autre
+- Expiration : 90 jours, a renouveler
+
+Il donne le droit d'ecrire dans ce depot et uniquement celui-la. Ne jamais
+utiliser un token classique a portee `repo`, qui ouvrirait tous les depots du
+compte a un service tiers.
+
+**L'horloge.** N'importe quel cron externe qui sait faire un POST avec des
+en-tetes. `cron-job.org` le fait gratuitement a la minute pres. Une tache, la
+methode POST, les deux en-tetes ci-dessus, le corps `{"event_type":"veille"}`,
+toutes les 5 minutes.
+
+Le `schedule` reste dans le fichier comme filet : si le declencheur externe
+tombe, la veille continue de tourner, en retard, mais elle tourne.
+
 
 ## Limites connues
 
