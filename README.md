@@ -3,6 +3,9 @@
 Détecte les nouveaux projets Codeur qui correspondent à Speerla, les score, rédige un
 brouillon de réponse à partir du brief, et envoie le tout par email.
 
+Python, aucune dépendance, bibliothèque standard uniquement. Trois fichiers, un flux
+RSS public, et une tâche planifiée. Licence MIT.
+
 Objectif : arriver sur le projet avec une réponse déjà écrite pendant que les autres
 découvrent l'annonce.
 
